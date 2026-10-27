@@ -1,0 +1,92 @@
+---
+title: "Does Golf Equipment Matter? A Statistical Analysis
+of Carry Distance"
+author: Caleb Bowcut
+format: 
+  html: 
+    embed-resources: true
+editor: visual
+---
+
+### Introduction
+
+As an avid golfer, I wanted to investigate whether different golf club models have a measurable effect on carry distance. Specifically, I compared three 8-irons: my wife's Ram budget iron, my older Adams Idea iron, and my new Callaway Paradym Ai Smoke iron. These clubs represent different price points, ages, and levels of technology.
+
+To conduct the experiment, I visited Golf the Round in Salt Lake City and used its shot-tracking technology to measure carry distance. I collected 22 shots per club, totaling 66 observations. To minimize potential fatigue and order effects, I randomized the sequence in which I hit the three clubs throughout the experiment.
+
+The objective was to determine whether there was a statistically significant difference in mean carry distance among the three models using exploratory data analysis and statistical inference in R.
+
+### Important Consideration
+
+Although the clubs were categorized by brand, this experiment compared three specific 8-iron models rather than the overall performance of each manufacturer. The observed differences may be influenced by factors such as club loft, design, age, and technology. Results could differ when comparing other models, such as the Callaway Paradym Ai Smoke and TaylorMade P790. Therefore, these findings should not be interpreted as evidence that one golf brand consistently outperforms another.
+
+**Import:**
+
+```{r}
+#| warnings: false
+#| output: false
+library(tidyverse)
+library(table1)
+```
+
+```{r}
+library(readr)
+GolfData <- read_csv("GolfData.csv")
+```
+
+**Wrangling:**
+
+```{r}
+GolfData$Brand <- factor(GolfData$Brand, levels = c("Ram", "Adams", "Callaway"))
+```
+
+**EDA**
+
+```{r}
+GolfData %>%
+  ggplot(aes(x = reorder(Brand, -Distance), y = Distance)) +
+  geom_boxplot(fill = "lightblue", color = "black", alpha = 0.8) +
+  labs(x = "",
+       y = "Carry Distance (Yards)",
+       title = "8 Iron Distance by Model",
+       subtitle = "Budget Club (Ram) vs Older Club (Adams) vs New Club (Callaway)") +
+  theme_minimal()
+
+```
+
+```{r}
+library(table1)
+table1(~ Distance | Brand, data = GolfData)
+```
+
+**Model:**
+
+Is there a statistically significant difference in Distance by the 3 models used?
+
+ANOVA Model: $Y_{ij} = \mu + \alpha_i + \epsilon_{ij}$, *i* = 1, 2, 3
+
+```{r}
+model <- aov(Distance ~ Brand, data = GolfData)
+summary(model)
+
+```
+
+**Summary**
+
+There is a statistically significant difference in average carry distance among the three club models at the 0.05 significance level. The ANOVA test produced an F-statistic of 6.635 with a p-value of 0.00243. Because the p-value is less than 0.05, we reject the null hypothesis that all model mean distances are equal. This suggests that at least one club model has a different mean carry distance compared to the others.
+
+Since the Callaway club has the highest sample mean carry distance and the ANOVA indicates a statistically significant difference between models, the results suggest that the Callaway club tends to produce greater carry distance compared to the other clubs in this sample.
+
+Tukey Analysis:
+
+```{r}
+TukeyHSD(model)
+```
+
+**Conclusion:**
+
+The Tukey HSD test showed that the Callaway Paradym Ai Smoke 8-iron had a statistically significantly higher mean carry distance than both the Ram (p = 0.0025) and Adams (p = 0.0275) 8-irons. On average, the Ai Smoke carried 35.55 yards farther than the Ram and 26.91 yards farther than the Adams. However, there was no statistically significant difference between the Ram and Adams models (p = 0.6745).
+
+These results suggest that the Ai Smoke provided a meaningful distance advantage over the other two models under the conditions of this experiment. While factors such as club loft and design may contribute to these differences, the findings support the idea that golf equipment can make a measurable difference in carry distance.
+
+**Important Limitation:** All 66 shots were taken on February 14, 2026, by a single golfer with an approximate 16 handicap. As a result, the findings reflect the performance of these specific club models for one recreational golfer and may not generalize to golfers of different skill levels or swing characteristics.
